@@ -11,7 +11,7 @@
 
 	.macro	addruart, rp, rv
 	ldr	\rp, =PA_UARTS_BASE
-	ldr	\rv, =PV_UARTS_BASE
+	ldr	\rv, =VA_UARTS_BASE
 #if CONFIG_SW_DEBUG_UART != 0
 	add	\rp, \rp, #(0x400 * CONFIG_SW_DEBUG_UART)
 	add	\rv, \rv, #(0x400 * CONFIG_SW_DEBUG_UART)
