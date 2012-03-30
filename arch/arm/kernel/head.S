@@ -78,31 +78,6 @@
 ENTRY(stext)
 	setmode	PSR_F_BIT | PSR_I_BIT | SVC_MODE, r9 @ ensure svc mode
 						@ and irqs disabled
-	mov     r0, #0
-	b       _real_start
-
-
-#if CONFIG_CHIP_ID == 1120
-#warning "chip id: 1120"
-1:	.long   0xbf7
-	.long   0x80000000
-
-_real_start:
-	adr     r4, 1b
-	ldmia   r4, {r1, r2}
-
-#elif CONFIG_CHIP_ID == 1123
-1:	.long   0xbf8
-	.long   0x81000000
-
-_real_start:
-	adr     r4, 1b
-	ldmia   r4, {r1, r2}
-#else
-#warning "no chipd id defined"
-_real_start:
-#endif
-
 	mrc	p15, 0, r9, c0, c0		@ get processor id
 	bl	__lookup_processor_type		@ r5=procinfo r9=cpuid
 	movs	r10, r5				@ invalid processor (r5=0)?
