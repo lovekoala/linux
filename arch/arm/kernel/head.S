@@ -251,6 +251,14 @@ __create_page_tables:
 	bls	1b
 #endif
 
+#ifdef CONFIG_ARCH_SUN4I
+	/* Add a map for script.bin */
+	add     r0, r4,  #((0x3000000 + KERNEL_START) & 0xff000000) >> (SECTION_SHIFT - PMD_ORDER)
+	add     r6, r3,  #48 << 20
+	str     r6, [r0, #((0x3000000 + KERNEL_START) & 0x00f00000) >> (SECTION_SHIFT - PMD_ORDER)]!
+	/* XXXX Also need some I/O areas such as DRAM controller. Currently masked by CONFIG_DEBUG_LL */
+#endif
+
 	/*
 	 * Then map boot params address in r2 or the first 1MB (2MB with LPAE)
 	 * of ram if boot params address is not specified.
