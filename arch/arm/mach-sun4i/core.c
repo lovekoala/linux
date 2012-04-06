@@ -38,9 +38,6 @@
 #include <mach/gpio_v2.h>
 #include <mach/script_v2.h>
 
-
-#include "core.h"
-
 #define SYS_TIMER_SCAL      (16)            /* timer clock source pre-divsion   */
 #define SYS_TIMER_CLKSRC    (24000000)      /* timer clock source               */
 #define TMR_INTER_VAL       (SYS_TIMER_CLKSRC/(SYS_TIMER_SCAL*HZ))
