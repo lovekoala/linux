@@ -2,4 +2,4 @@
 # Makefile for the linux kernel.
 #
 obj-y += clock/
-obj-y += core.o devices.o
+obj-y += core.o
