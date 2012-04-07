@@ -770,14 +770,14 @@ config ARCH_SUN4I
 	select HAVE_CLK
 	select ARM_VIC
 	select ZONE_DMA
-	select ARCH_HAS_CPUFREQ
+	#select ARCH_HAS_CPUFREQ
 	#select CHIP_ID
 	#select COMMON_CLKDEV
 	select ICST
 	select GENERIC_CLOCKEVENTS
 	select ARM_L1_CACHE_SHIFT_6
 	help
-	  This enables support for ARM Ltd Versatile board.
+	  This enables support for Allwinner A10 based devices.
 
 config ARCH_S3C2410
 	bool "Samsung S3C2410, S3C2412, S3C2413, S3C2416, S3C2440, S3C2442, S3C2443, S3C2450"
