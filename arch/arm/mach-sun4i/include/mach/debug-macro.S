@@ -9,9 +9,11 @@
 #include <mach/hardware.h>
 #include <mach/uart_regs.h>
 
-	.macro	addruart, rp, rv, tmp
-	ldr	\rp, =PA_UARTS_BASE
-	ldr	\rv, =VA_UARTS_BASE
+	.macro	addruart, rx, tmp
+	mrc	p15, 0, \rx, c1, c0
+	tst	\rx, #1					@ MMU enabled?
+	ldreq	\rx, =PA_UARTS_BASE
+	ldrne	\rx, =VA_UARTS_BASE
 #if CONFIG_SW_DEBUG_UART != 0
 	add	\rp, \rp, #(0x400 * CONFIG_SW_DEBUG_UART)
 	add	\rv, \rv, #(0x400 * CONFIG_SW_DEBUG_UART)
