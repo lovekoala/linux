@@ -256,49 +256,6 @@ void __init sw_map_io(void)
     iotable_init(sw_io_desc, ARRAY_SIZE(sw_io_desc));
 }
 
-static u32 DRAMC_get_dram_size(void)
-{
-    u32 reg_val;
-    u32 dram_size;
-    u32 chip_den;
-
-    reg_val = readl(SW_DRAM_SDR_DCR);
-    chip_den = (reg_val>>3)&0x7;
-    if(chip_den == 0)
-        dram_size = 32;
-    else if(chip_den == 1)
-        dram_size = 64;
-    else if(chip_den == 2)
-        dram_size = 128;
-    else if(chip_den == 3)
-        dram_size = 256;
-    else if(chip_den == 4)
-        dram_size = 512;
-    else
-        dram_size = 1024;
-
-    if( ((reg_val>>1)&0x3) == 0x1)
-        dram_size<<=1;
-    if( ((reg_val>>6)&0x7) == 0x3)
-        dram_size<<=1;
-    if( ((reg_val>>10)&0x3) == 0x1)
-        dram_size<<=1;
-
-    return dram_size;
-}
-
-extern unsigned long fb_start;
-extern unsigned long fb_size;
-extern unsigned long gps_start;
-extern unsigned long gps_size;
-extern unsigned long g2d_start;
-extern unsigned long g2d_size;
-
-extern int sw_register_clocks(void);
-void __init sw_init(void)
-{
-}
-
 static void __init sw_timer_init(void)
 {
     volatile u32  val = 0;
@@ -326,17 +283,6 @@ static void __init sw_timer_init(void)
     timer0_clockevent.min_delta_ns = clockevent_delta2ns(0x1, &timer0_clockevent);
     timer0_clockevent.cpumask = cpumask_of(0);
     clockevents_register_device(&timer0_clockevent);
-}
-
-static void __init sw_reserve(void)
-{
-    pr_info("Lichee System reserve\n");
-}
-
-static void __init sw_fixup(struct tag *tags, char **cmdline,
-			    struct meminfo *mi)
-{
-    pr_info("Lichee System fixup\n");
 }
 
 struct sys_timer sw_timer = {
@@ -367,11 +313,8 @@ EXPORT_SYMBOL(sw_get_ic_ver);
 
 MACHINE_START(SUN4I, "sun4i")
 	.map_io         = sw_map_io,
-	.fixup          = sw_fixup,
-	.reserve        = sw_reserve,
 	.init_irq       = sw_init_irq,
 	.timer          = &sw_timer,
-	.init_machine   = sw_init,
 	.atag_offset	= 0x100,
 MACHINE_END
 
