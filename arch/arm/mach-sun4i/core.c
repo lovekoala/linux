@@ -34,9 +34,6 @@
 #include <mach/hardware.h>
 #include <mach/platform.h>
 #include <mach/system.h>
-#include <mach/script_i.h>
-#include <mach/gpio_v2.h>
-#include <mach/script_v2.h>
 
 #define SYS_TIMER_SCAL      (16)            /* timer clock source pre-divsion   */
 #define SYS_TIMER_CLKSRC    (24000000)      /* timer clock source               */
@@ -259,15 +256,6 @@ void __init sw_map_io(void)
     iotable_init(sw_io_desc, ARRAY_SIZE(sw_io_desc));
 }
 
-struct bus_type sw_subsys = {
-    .name = "sw-core",
-    .dev_name = "sw-core",
-};
-
-static struct device sw_dev = {
-    .bus = &sw_subsys,
-};
-
 static u32 DRAMC_get_dram_size(void)
 {
     u32 reg_val;
@@ -306,17 +294,9 @@ extern unsigned long gps_size;
 extern unsigned long g2d_start;
 extern unsigned long g2d_size;
 
-static int __init sw_core_init(void)
-{
-    pr_info("DRAM Size: %u\n", DRAMC_get_dram_size());
-    return subsys_system_register(&sw_subsys, NULL);
-}
-core_initcall(sw_core_init);
-
 extern int sw_register_clocks(void);
 void __init sw_init(void)
 {
-    device_register(&sw_dev);
 }
 
 static void __init sw_timer_init(void)
@@ -348,75 +328,15 @@ static void __init sw_timer_init(void)
     clockevents_register_device(&timer0_clockevent);
 }
 
-extern int script_get_int(const char *script_buf, const char *main_key, const char *sub_key);
 static void __init sw_reserve(void)
 {
-	int gps_used = 0;
-	int g2d_used = 0;
-	char *script_base = (char *)(PAGE_OFFSET + 0x3000000);
-
-	gps_used = script_get_int(script_base, "gps_para", "gps_used");
-	g2d_used = script_get_int(script_base, "g2d_para", "g2d_used");
-
-	memblock_reserve(CONFIG_SW_SYSMEM_RESERVED_BASE, CONFIG_SW_SYSMEM_RESERVED_SIZE * 1024);
-	memblock_reserve(fb_start, fb_size);
-
-	pr_info("Memory Reserved:\n");
-	pr_info("  VE:\t0x%08x, 0x%08x\n", (unsigned int)CONFIG_SW_SYSMEM_RESERVED_BASE,
-		(unsigned int)CONFIG_SW_SYSMEM_RESERVED_SIZE * 1024);
-	pr_info("  FB:\t0x%08x, 0x%08x\n", (unsigned int)fb_start, (unsigned int)fb_size);
-
-/* reserve memory for GPS, G2D */
-	if (gps_used) {
-		gps_size = script_get_int(script_base, "gps_para", "gps_size");
-		if (gps_size < 0 || gps_size > SW_GPS_MEM_MAX) {
-			gps_size = SW_GPS_MEM_MAX;
-		}
-		gps_start = SW_GPS_MEM_BASE;
-		gps_size = gps_size;
-		pr_info("  GPS:\t0x%08x, 0x%08x\n", (unsigned int)gps_start, (unsigned int)gps_size);
-		memblock_reserve(gps_start, gps_size);
-	}
-
-	if (g2d_used) {
-		g2d_size = script_get_int(script_base, "g2d_para", "g2d_size");
-		if (g2d_size < 0 || g2d_size > SW_G2D_MEM_MAX) {
-			g2d_size = SW_G2D_MEM_MAX;
-		}
-		g2d_start = SW_G2D_MEM_BASE;
-		g2d_size = g2d_size;
-		pr_info("  G2D:\t0x%08x, 0x%08x\n", (unsigned int)g2d_start, (unsigned int)g2d_size);
-		memblock_reserve(g2d_start, g2d_size);
-	}
+    pr_info("Lichee System reserve\n");
 }
 
 static void __init sw_fixup(struct tag *tags, char **cmdline,
 			    struct meminfo *mi)
 {
-    u32 size;
-
     pr_info("Lichee System fixup\n");
-    if (mi->nr_banks != 0) {
-	    int i;
-	    for (i = 0; i < mi->nr_banks; i++)
-		size += mi->bank[i].size / SZ_1M;
-	    pr_info("Total Configured Memory: %uMB with %d banks\n", size, mi->nr_banks);
-    } else {
-	    size = DRAMC_get_dram_size();
-
-	    if (size <= 512) {
-		    mi->nr_banks=1;
-		    mi->bank[0].start = 0x40000000;
-		    mi->bank[0].size = SZ_1M * (size - 64);
-	    } else {
-		    mi->nr_banks=2;
-		    mi->bank[0].start = 0x40000000;
-		    mi->bank[0].size = SZ_1M * (512 - 64);
-		    mi->bank[1].start = 0x60000000;
-		    mi->bank[1].size = SZ_1M * (size - 512);
-	    }
-	    pr_info("Total Detected Memory: %uMB with %d banks\n", size, mi->nr_banks);
-    }
 }
 
 struct sys_timer sw_timer = {
@@ -427,109 +347,23 @@ enum sw_ic_ver sw_get_ic_ver(void)
 {
 	volatile u32 val;
 
-    /* write the register */
+	/* write the register */
 	val = readl(SW_VA_TIMERC_IO_BASE + 0x13c);
-    val &= ~(0x03<<6);
-    writel(val, SW_VA_TIMERC_IO_BASE + 0x13c);
+	val &= ~(0x03<<6);
+	writel(val, SW_VA_TIMERC_IO_BASE + 0x13c);
 
-    /* read the register and parse ic version */
+	/* read the register and parse ic version */
 	val = readl(SW_VA_TIMERC_IO_BASE + 0x13c);
 	val = (val >> 6) & 0x3;
 	if (val == 0x00) {
 		return MAGIC_VER_A;
 	}
 	else if(val == 0x03) {
-	    return MAGIC_VER_B;
+		return MAGIC_VER_B;
 	}
 	return MAGIC_VER_C;
 }
 EXPORT_SYMBOL(sw_get_ic_ver);
-
-static script_sub_key_t *get_sub_key(const char *script_buf, const char *main_key, const char *sub_key)
-{
-	script_head_t *hd = NULL;
-	script_main_key_t *mk = NULL;
-	script_sub_key_t *sk = NULL;
-	int i, j;
-
-	if (main_key == NULL || sub_key == NULL) {
-		return NULL;
-	}
-
-	hd = (script_head_t *)script_buf;
-	mk = (script_main_key_t *)(hd + 1);
-
-	for (i = 0; i < hd->main_key_count; i++) {
-		if (strcmp(main_key, mk->main_name)) {
-			mk++;
-			continue;
-		}
-
-		for (j = 0; j < mk->lenth; j++) {
-			sk = (script_sub_key_t *)(script_buf + (mk->offset<<2) + j * sizeof(script_sub_key_t));
-			if (!strcmp(sub_key, sk->sub_name)) {
-				return sk;
-			}
-		}
-	}
-	return NULL;
-}
-
-/**
- * @func: script_get_int
- * @desc: get key value
- * @ret: -1 ERROR, >=0 OK
- * @arg1
- * @arg2:
- * @arg3:
- **/
-int script_get_int(const char *script_buf, const char *main_key, const char *sub_key)
-{
-	script_sub_key_t *sk = NULL;
-	char *pdata;
-	int value;
-
-	sk = get_sub_key(script_buf, main_key, sub_key);
-	if (sk == NULL) {
-		return -1;
-	}
-
-	if (((sk->pattern >> 16) & 0xffff) == SCIRPT_PARSER_VALUE_TYPE_SINGLE_WORD) {
-		pdata = (char *)(script_buf + (sk->offset<<2));
-		value = *((int *)pdata);
-		return value;
-	}
-
-	return -1;
-}
-
-/**
- * @func: script_get_str
- * @desc: get key value
- * @ret: NULL on ERROR
- * @arg1
- * @arg2:
- * @arg3:
- * @arg4: user require to clean the buf
- **/
-char *script_get_str(const char *script_buf, const char *main_key, const char *sub_key, char *buf)
-{
-	script_sub_key_t *sk = NULL;
-	char *pdata;
-
-	sk = get_sub_key(script_buf, main_key, sub_key);
-	if (sk == NULL) {
-		return NULL;
-	}
-
-	if (((sk->pattern >> 16) & 0xffff) == SCIRPT_PARSER_VALUE_TYPE_STRING) {
-		pdata = (char *)(script_buf + (sk->offset<<2));
-		memcpy(buf, pdata, ((sk->pattern >> 0) & 0xffff));
-		return (char *)buf;
-	}
-
-	return NULL;
-}
 
 MACHINE_START(SUN4I, "sun4i")
 	.map_io         = sw_map_io,
