@@ -1,0 +1,4 @@
+menu "All winner system configure"
+	depends on ARCH_SUN4I
+
+endmenu
