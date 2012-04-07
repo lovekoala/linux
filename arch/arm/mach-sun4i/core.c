@@ -308,8 +308,6 @@ EXPORT_SYMBOL(sw_get_ic_ver);
 
 MACHINE_START(SUN4I, "sun4i")
 /* Maintainer: ARM Ltd/Deep Blue Solutions Ltd */
-.phys_io        = 0x01c00000,
-	.io_pg_offst    = ((0xf1c00000) >> 18) & 0xfffc,
 	.map_io         = sw_map_io,
 	.init_irq       = sw_init_irq,
 	.timer          = &sw_timer,
