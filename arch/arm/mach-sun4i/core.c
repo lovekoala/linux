@@ -113,8 +113,9 @@ static struct irqaction sw_timer_irq = {
     .handler = sw_timer_interrupt,
 };
 
-void sw_irq_ack(unsigned int irq)
+void sw_irq_ack(struct irq_data *d)
 {
+    unsigned int irq = d->irq;
     if (irq < 32){
         writel(readl(SW_INT_ENABLE_REG0) & ~(1<<irq), SW_INT_ENABLE_REG0);
         writel(readl(SW_INT_MASK_REG0) | (1 << irq), SW_INT_MASK_REG0);
@@ -133,8 +134,9 @@ void sw_irq_ack(unsigned int irq)
 }
 
 /* Disable irq */
-static void sw_irq_mask(unsigned int irq)
+static void sw_irq_mask(struct irq_data *d)
 {
+    unsigned int irq = d->irq;
     if(irq < 32){
         writel(readl(SW_INT_ENABLE_REG0) & ~(1<<irq), SW_INT_ENABLE_REG0);
         writel(readl(SW_INT_MASK_REG0) | (1 << irq), SW_INT_MASK_REG0);
@@ -150,8 +152,9 @@ static void sw_irq_mask(unsigned int irq)
 }
 
 /* Enable irq */
-static void sw_irq_unmask(unsigned int irq)
+static void sw_irq_unmask(struct irq_data *d)
 {
+    unsigned int irq = d->irq;
     if(irq < 32){
         writel(readl(SW_INT_ENABLE_REG0) | (1<<irq), SW_INT_ENABLE_REG0);
         writel(readl(SW_INT_MASK_REG0) & ~(1 << irq), SW_INT_MASK_REG0);
@@ -170,9 +173,9 @@ static void sw_irq_unmask(unsigned int irq)
 
 static struct irq_chip sw_f23_sic_chip = {
     .name   = "SW_F23_SIC",
-    .ack    = sw_irq_ack,
-    .mask   = sw_irq_mask,
-    .unmask = sw_irq_unmask,
+    .irq_ack    = sw_irq_ack,
+    .irq_mask   = sw_irq_mask,
+    .irq_unmask = sw_irq_unmask,
 };
 
 void __init sw_init_irq(void)
@@ -201,8 +204,7 @@ void __init sw_init_irq(void)
     writel(0x00, SW_INT_NMI_CTRL_REG);
 
     for (i = SW_INT_START; i < SW_INT_END; i++) {
-        set_irq_chip(i, &sw_f23_sic_chip);
-        set_irq_handler(i, handle_level_irq);
+        irq_set_chip_and_handler(i, &sw_f23_sic_chip, handle_level_irq);
         set_irq_flags(i, IRQF_VALID | IRQF_PROBE);
     }
 }
