@@ -1,4 +1,5 @@
 #include <linux/init.h>
+#include <linux/export.h>
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
 #include <linux/platform_device.h>
@@ -313,7 +314,7 @@ MACHINE_START(SUN4I, "sun4i")
 	.map_io         = sw_map_io,
 	.init_irq       = sw_init_irq,
 	.timer          = &sw_timer,
-	.boot_params    = (unsigned long)(0x40000000 + 0x100),
+	.atag_offset    = 0x100,
 MACHINE_END
 
 
