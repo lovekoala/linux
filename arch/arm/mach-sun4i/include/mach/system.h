@@ -23,11 +23,6 @@
 
 #include <asm/proc-fns.h>
 
-static inline void arch_idle(void)
-{
-	cpu_do_idle();
-}
-
 enum sw_ic_ver {
 	MAGIC_VER_A = 0,
 	MAGIC_VER_B,
