@@ -11,14 +11,8 @@
 #include <mach/platform.h>
 #include <asm/hardware/vic.h>
 
-        .macro  disable_fiq
-        .endm
-
         .macro  get_irqnr_preamble, base, tmp
         ldr \base, =SW_VA_INT_IO_BASE
-        .endm
-
-        .macro  arch_ret_to_user, tmp1, tmp2
         .endm
 
         .macro  get_irqnr_and_base, irqnr, irqstat, base, tmp
