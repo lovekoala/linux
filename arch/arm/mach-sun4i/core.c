@@ -16,7 +16,6 @@
 #include <linux/bootmem.h>
 #include <linux/clkdev.h>
 
-#include <asm/system.h>
 #include <asm/irq.h>
 #include <asm/leds.h>
 #include <asm/hardware/arm_timer.h>
